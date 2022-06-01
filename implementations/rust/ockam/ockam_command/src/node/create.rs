@@ -41,7 +41,7 @@ impl CreateCommand {
         } else {
             if let Err(e) = cfg.create_node(&command.node_name, DEFAULT_TCP_PORT) {
                 eprintln!(
-                    "failed to spawn node with name '{}': {}",
+                    "failed to spawn node with name '{}': {:?}",
                     command.node_name, e
                 );
                 std::process::exit(-1);
@@ -69,7 +69,7 @@ async fn query_status(ctx: Context, _: (), mut base_route: Route) -> anyhow::Res
             "Node: {}, Status: {}, Worker count: {}",
             node_name, status, workers
         ),
-        _ => eprintln!("Received invalid reply format!"),
+        // _ => eprintln!("Received invalid reply format!"),
     }
 
     util::stop_node(ctx).await

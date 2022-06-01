@@ -8,7 +8,7 @@ pub struct DeleteCommand {
 }
 
 impl DeleteCommand {
-    pub fn run(cfg: &mut OckamConfig, command: DeleteCommand) {
+    pub fn run(_cfg: &mut OckamConfig, command: DeleteCommand) {
         println!("deleting {:?}", command)
     }
 }

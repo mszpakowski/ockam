@@ -38,8 +38,8 @@ impl NodeMan {
 
 #[crate::worker]
 impl Worker for NodeMan {
-    type Context = Context;
     type Message = NodeManMessage;
+    type Context = Context;
 
     async fn handle_message(
         &mut self,

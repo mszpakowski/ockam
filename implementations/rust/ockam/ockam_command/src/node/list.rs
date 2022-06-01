@@ -5,7 +5,7 @@ use clap::Args;
 pub struct ListCommand {}
 
 impl ListCommand {
-    pub fn run(cfg: &mut OckamConfig, command: ListCommand) {
+    pub fn run(_cfg: &mut OckamConfig, command: ListCommand) {
         println!("listing {:?}", command)
     }
 }

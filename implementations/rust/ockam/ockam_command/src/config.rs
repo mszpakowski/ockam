@@ -4,7 +4,7 @@ use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
-    fs::{create_dir, create_dir_all, File, OpenOptions},
+    fs::{create_dir_all, File, OpenOptions},
     io::{Read, Write},
     path::PathBuf,
 };
@@ -94,10 +94,10 @@ impl OckamConfig {
 
     /// Delete an existing node
     pub fn delete_node(&mut self, name: &str) -> Result<(), ConfigError> {
-        self.nodes
-            .remove(name)
-            .ok_or(ConfigError::NodeNotFound(name.to_string()))?;
-        Ok(())
+        match self.nodes.remove(name) {
+            Some(_) => Ok(()),
+            None => Err(ConfigError::NodeExists(name.to_string())),
+        }
     }
 }
 

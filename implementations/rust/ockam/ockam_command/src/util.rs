@@ -48,7 +48,9 @@ where
             tcp.connect(format!("localhost:{}", port))
                 .await
                 .expect("failed to connect to node");
-            let route = route![format!("TCP#localhost:{}", port)];
+            let route = route![(TCP, format!("localhost:{}", port))];
+
+            println!("{:?}", route);
 
             lambda(ctx, a, route)
                 .await

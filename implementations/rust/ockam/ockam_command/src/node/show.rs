@@ -8,7 +8,7 @@ pub struct ShowCommand {
 }
 
 impl ShowCommand {
-    pub fn run(cfg: &mut OckamConfig, command: ShowCommand) {
+    pub fn run(_cfg: &mut OckamConfig, command: ShowCommand) {
         println!("showing {:?}", command)
     }
 }
