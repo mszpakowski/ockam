@@ -4,6 +4,7 @@ use std::{env::current_exe, fs::OpenOptions, process::Command, time::Duration};
 use crate::{
     node::show::query_status,
     util::{connect_to, embedded_node, OckamConfig, DEFAULT_TCP_PORT},
+    CommandGlobalOpts,
 };
 use ockam::authenticated_storage::InMemoryStorage;
 use ockam::{vault::Vault, AsyncTryClone, Context, TcpTransport};
@@ -32,7 +33,8 @@ pub struct CreateCommand {
     no_watchdog: bool,
 }
 impl CreateCommand {
-    pub fn run(cfg: &OckamConfig, command: CreateCommand) {
+    pub fn run(opts: CommandGlobalOpts, command: CreateCommand) {
+        let cfg = &opts.config;
         if command.spawn {
             // On systems with non-obvious path setups (or during
             // development) re-executing the current binary is a more

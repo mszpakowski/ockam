@@ -1,4 +1,5 @@
-use crate::util::{api, connect_to, stop_node, OckamConfig};
+use crate::util::{api, connect_to, stop_node};
+use crate::CommandGlobalOpts;
 use clap::{Args, Subcommand};
 use ockam::Context;
 use ockam_api::Status;
@@ -44,8 +45,8 @@ pub enum CreateSubCommand {
 }
 
 impl CreateCommand {
-    pub fn run(cfg: &OckamConfig, command: CreateCommand) -> anyhow::Result<()> {
-        let port = cfg.select_node(&command.api_node).unwrap().port;
+    pub fn run(opts: CommandGlobalOpts, command: CreateCommand) -> anyhow::Result<()> {
+        let port = opts.config.select_node(&command.api_node).unwrap().port;
 
         match command.create_subcommand {
             CreateSubCommand::Connector { .. } => connect_to(port, command, create_connector),
