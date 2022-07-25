@@ -9,6 +9,7 @@ defmodule Ockam.Stream.Client.Consumer do
   require Logger
 
   defstruct address: nil,
+            all_addresses: [],
             stream_name: nil,
             stream_route: nil,
             index_route: nil,
