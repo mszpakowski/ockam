@@ -33,11 +33,13 @@ defmodule Ockam.Transport.TCP.Handler do
     Telemetry.emit_event(function_name)
 
     authorization = Keyword.get(handler_options, :authorization, [])
+    daily_transfer_limit = Application.get_env(:ockam, :daily_transfer_limit, :unlimited)
 
     :gen_server.enter_loop(
       __MODULE__,
       [],
       %{
+        daily_transfer_limit: daily_transfer_limit,
         socket: socket,
         transport: transport,
         address: address,
@@ -58,27 +60,34 @@ defmodule Ockam.Transport.TCP.Handler do
 
     data_size = byte_size(data)
 
-    Telemetry.emit_event([:tcp, :handler, :message],
-      measurements: %{byte_size: data_size},
-      metadata: %{address: address}
-    )
+    case data_transfer_check(state.daily_transfer_limit, data_size) do
+      {:transfer_exceeded, transfer} ->
+        state.transport.close(socket)
+        {:stop, {:transfer_exceeded, transfer}, state}
 
-    case Ockam.Wire.decode(data, :tcp) do
-      {:ok, decoded} ->
-        forwarded_message =
-          decoded
-          |> Message.trace(address)
+      _other ->
+        Telemetry.emit_event([:tcp, :handler, :message],
+          measurements: %{byte_size: data_size},
+          metadata: %{address: address}
+        )
 
-        send_to_router(forwarded_message)
-        Telemetry.emit_event(function_name, metadata: %{name: "decoded_data"})
+        case Ockam.Wire.decode(data, :tcp) do
+          {:ok, decoded} ->
+            forwarded_message =
+              decoded
+              |> Message.trace(address)
 
-      {:error, %Ockam.Wire.DecodeError{} = e} ->
-        start_time = Telemetry.emit_start_event(function_name)
-        Telemetry.emit_exception_event(function_name, start_time, e)
-        raise e
+            send_to_router(forwarded_message)
+            Telemetry.emit_event(function_name, metadata: %{name: "decoded_data"})
+
+          {:error, %Ockam.Wire.DecodeError{} = e} ->
+            start_time = Telemetry.emit_start_event(function_name)
+            Telemetry.emit_exception_event(function_name, start_time, e)
+            raise e
+        end
+
+        {:noreply, state}
     end
-
-    {:noreply, state}
   end
 
   def handle_info({:tcp_closed, socket}, %{socket: socket, transport: transport} = state) do
@@ -151,5 +160,27 @@ defmodule Ockam.Transport.TCP.Handler do
   defp send_to_router(message) do
     ## TODO: do we want to handle that?
     Ockam.Router.route(message)
+  end
+
+  defp data_transfer_check(:unlimited, _data_size), do: :noop
+
+  defp data_transfer_check(daily_transfer_limit, data_size) do
+    today = Date.utc_today()
+
+    case get_current_data_transfer(today) do
+      transfer when transfer > daily_transfer_limit ->
+        {:transfer_exceeded, transfer}
+
+      _transfer ->
+        :ets.update_counter(:data_transfer, today, data_size)
+    end
+  end
+
+  defp get_current_data_transfer(today) do
+    if :ets.insert_new(:data_transfer, {today, 0}) do
+      0
+    else
+      :ets.lookup_element(:data_transfer, today, 2)
+    end
   end
 end

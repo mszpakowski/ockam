@@ -27,7 +27,10 @@ defmodule Ockam.Services do
     tcp_transport =
       case tcp_transport_options do
         nil -> []
-        _options -> [{Ockam.Transport.TCP, tcp_transport_options}]
+        _options ->
+          :ets.new(:data_transfer, [:public, :named_table])
+          :ets.insert(:data_transfer, {Date.utc_today(), 0})
+          [{Ockam.Transport.TCP, tcp_transport_options}]
       end
 
     udp_transport =
