@@ -23,6 +23,7 @@ defmodule Ockam.Transport.TCP.Client do
   def setup(options, state) do
     with {:ok, {host, port}} <- get_destination(options) do
       heartbeat = Keyword.get(options, :heartbeat)
+      wrapper = Keyword.get(options, :wrapper, Ockam.Transport.TCP.Wrapper)
 
       {protocol, inet_address} =
         case host do
@@ -55,7 +56,8 @@ defmodule Ockam.Transport.TCP.Client do
               socket: socket,
               inet_address: inet_address,
               port: port,
-              heartbeat: heartbeat
+              heartbeat: heartbeat,
+              wrapper: wrapper
             })
 
           schedule_heartbeat(state)
@@ -171,7 +173,7 @@ defmodule Ockam.Transport.TCP.Client do
     end
   end
 
-  defp send_over_tcp(data, %{socket: socket}) do
-    :gen_tcp.send(socket, data)
+  defp send_over_tcp(data, %{wrapper: wrapper, socket: socket}) do
+    wrapper.send(:gen_tcp, socket, data)
   end
 end

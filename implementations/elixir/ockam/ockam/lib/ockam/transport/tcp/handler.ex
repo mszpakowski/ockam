@@ -33,12 +33,16 @@ defmodule Ockam.Transport.TCP.Handler do
     Telemetry.emit_event(function_name)
 
     authorization = Keyword.get(handler_options, :authorization, [])
+    wrapper = Keyword.get(handler_options, :wrapper, Ockam.Transport.TCP.Wrapper)
+    daily_transfer_limit = Application.get_env(:ockam, :daily_transfer_limit, :unlimited)
 
     :gen_server.enter_loop(
       __MODULE__,
       [],
       %{
+        daily_transfer_limit: daily_transfer_limit,
         socket: socket,
+        wrapper: wrapper,
         transport: transport,
         address: address,
         authorization: authorization
@@ -124,7 +128,7 @@ defmodule Ockam.Transport.TCP.Handler do
 
   def handle_message(
         %Ockam.Message{} = message,
-        %{transport: transport, socket: socket} = state
+        %{wrapper: wrapper, transport: transport, socket: socket} = state
       ) do
     forwarded_message = Message.forward(message)
 
@@ -133,7 +137,7 @@ defmodule Ockam.Transport.TCP.Handler do
         ## TODO: send/receive message in multiple TCP packets
         case byte_size(encoded) <= TCP.packed_size_limit() do
           true ->
-            transport.send(socket, encoded)
+            wrapper.send(transport, socket, encoded)
 
           false ->
             Logger.error("Message to big for TCP: #{inspect(message)}")

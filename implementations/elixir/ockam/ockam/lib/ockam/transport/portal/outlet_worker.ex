@@ -18,6 +18,7 @@ defmodule Ockam.Transport.Portal.OutletWorker do
 
     ssl = Keyword.get(options, :ssl, false)
     ssl_options = Keyword.get(options, :ssl_options, [])
+    wrapper = Keyword.get(options, :wrapper, Ockam.Transport.TCP.Wrapper)
 
     Logger.info(
       "Starting outlet worker to #{target_host}:#{target_port}.  peer: #{inspect(msg.return_route)}"
@@ -60,6 +61,7 @@ defmodule Ockam.Transport.Portal.OutletWorker do
        |> Map.put(:protocol, protocol)
        |> Map.put(:peer, msg.return_route)
        |> Map.put(:connected, true)}
+       |> Map.put(:wrapper, wrapper)
     else
       error ->
         Logger.error("Error starting outlet: #{inspect(options)} : #{inspect(error)}")
@@ -128,8 +130,8 @@ defmodule Ockam.Transport.Portal.OutletWorker do
   defp handle_protocol_msg(state, :disconnect),
     do: {:stop, :normal, Map.put(state, :connected, false)}
 
-  defp handle_protocol_msg(%{protocol: %{send_mod: send_mod}} = state, {:payload, data}) do
-    :ok = send_mod.send(state.socket, data)
+  defp handle_protocol_msg(%{wrapper: wrapper, protocol: %{send_mod: send_mod}} = state, {:payload, data}) do
+    :ok = wrapper.send(send_mod, state.socket, data)
     {:ok, state}
   end
 

@@ -150,7 +150,7 @@ defmodule Ockam.Kafka.Interceptor.OutletManager do
            target_host: target_host,
            target_port: target_port
          },
-         %{ssl: ssl, ssl_options: ssl_options}
+         %{ssl: ssl, ssl_options: ssl_options, wrapper: wrapper}
        ) do
     address = outlet_address(node_id, outlet_prefix)
     ## We crash on failures because error handling would be too complex
@@ -164,7 +164,8 @@ defmodule Ockam.Kafka.Interceptor.OutletManager do
           target_host: target_host,
           target_port: target_port,
           ssl: ssl,
-          ssl_options: ssl_options
+          ssl_options: ssl_options,
+          wrapper: wrapper
         ]
       )
   end

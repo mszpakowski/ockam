@@ -190,6 +190,7 @@ defmodule Ockam.Services.Kafka.Provider do
 
     ssl = Keyword.get(outlet_args, :ssl, false)
     ssl_options = Keyword.get(outlet_args, :ssl_options, [])
+    wrapper = Keyword.get(outlet_args, :wrapper, Ockam.Transport.TCP.Wrapper)
 
     [
       {Ockam.Session.Spawner,
@@ -203,7 +204,8 @@ defmodule Ockam.Services.Kafka.Provider do
            ssl_options: ssl_options,
            authorization: authorization,
            ## It doesn't make sense to restart the outlet worker
-           restart_type: :temporary
+           restart_type: :temporary,
+           wrapper: wrapper
          ],
          authorization: authorization
        ]},
@@ -224,6 +226,7 @@ defmodule Ockam.Services.Kafka.Provider do
     bootstrap_port = Keyword.get(inlet_args, :bootstrap_port, 9000)
     base_port = Keyword.get(inlet_args, :base_port, 9001)
     allowed_ports = Keyword.get(inlet_args, :allowed_ports, 20)
+    wrapper = Keyword.get(inlet_args, :wrapper, Ockam.Transport.TCP.Wrapper)
 
     outlet_route =
       Keyword.get(inlet_args, :outlet_route, [
